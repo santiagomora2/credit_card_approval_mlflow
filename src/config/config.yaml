@@ -9,6 +9,9 @@ mlflow:
 # -------------------------
 data:
   features_path: "data/features/data.csv"
+  train_path: "data/processed/train.csv"
+  val_path: "data/processed/val.csv"
+  test_path: "data/processed/test.csv"
   target_column: "TARGET"
 
 # -------------------------

@@ -1,6 +1,8 @@
 import yaml
 import pandas as pd
 from sklearn.model_selection import StratifiedShuffleSplit
+from preprocessing import preprocess_data
+from features import extract_features_and_label
 
 
 def load_config(config_path: str) -> dict:
@@ -9,6 +11,11 @@ def load_config(config_path: str) -> dict:
 
 
 def main():
+
+    preprocess_data()
+
+    extract_features_and_label()
+
     config = load_config("src/config/config.yaml")
 
     input_path = config["data"]["features_path"]

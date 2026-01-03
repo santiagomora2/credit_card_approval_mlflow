@@ -1,14 +1,14 @@
 # pycache
-/__pycache__
+__pycache__
 
 # MLFlow
 /mlruns
 *.db
 
 # Data (due to data usage policy, available in kaggle)
-/data/raw/*
-/data/processed/*
-/data/features/*
+/data/raw/*.csv
+/data/processed/*.csv
+/data/features/*.csv
 
 # Testing notebooks
 /notebooks
