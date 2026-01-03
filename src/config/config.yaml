@@ -9,9 +9,9 @@ mlflow:
 # -------------------------
 data:
   features_path: "data/features/data.csv"
-  train_path: "data/processed/train.csv"
-  val_path: "data/processed/val.csv"
-  test_path: "data/processed/test.csv"
+  train_path: "data/features/train.csv"
+  val_path: "data/features/val.csv"
+  test_path: "data/features/test.csv"
   target_column: "TARGET"
 
 # -------------------------
@@ -35,6 +35,16 @@ model:
   random_forest:
     n_estimators: 300
     max_depth: null
+    min_samples_leaf: 100
+
+  xgboost:
+    n_estimators: 300
+    max_depth: null
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_lambda: 1.0
+    reg_alpha: 0.0
 
 # -------------------------
 # Evaluation / Gatekeeping
