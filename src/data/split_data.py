@@ -31,7 +31,7 @@ def main():
 
     df = pd.read_csv(input_path)
 
-    X = df.drop(columns=[target_col])
+    X = df.drop(columns=[target_col, "ID"])
     y = df[target_col]
 
     # First split: train vs temp (val + test)
@@ -43,7 +43,7 @@ def main():
 
     train_idx, temp_idx = next(sss_1.split(X, y))
 
-    df_train = df.iloc[train_idx]
+    df_train = df.iloc[train_idx].drop(columns = "ID")
     df_temp = df.iloc[temp_idx]
 
     # Second split: val vs test
@@ -55,13 +55,13 @@ def main():
         random_state=random_state
     )
 
-    X_temp = df_temp.drop(columns=[target_col])
+    X_temp = df_temp.drop(columns=[target_col, "ID"])
     y_temp = df_temp[target_col]
 
     val_idx, test_idx = next(sss_2.split(X_temp, y_temp))
 
-    df_val = df_temp.iloc[val_idx]
-    df_test = df_temp.iloc[test_idx]
+    df_val = df_temp.iloc[val_idx].drop(columns = "ID")
+    df_test = df_temp.iloc[test_idx].drop(columns = "ID")
 
     df_train.to_csv("data/features/train.csv", index=False)
     df_val.to_csv("data/features/val.csv", index=False)

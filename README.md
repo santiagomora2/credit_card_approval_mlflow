@@ -2,7 +2,7 @@
 
 This repository contains an **end-to-end Classic Machine Learning MLOps** mini project, focused on building, tracking, and evaluating credit risk models using **MLflow, scikit-learn**, and reproducible data pipelines.
 
-The project doesn't emphasize model accuracy only, but rather **production-grade ML practices**: clean data splits, experiment tracking, class imbalance handling, and evaluation gates.
+This project doesn't emphasize model accuracy, but rather **production-grade ML practices**: clean data splits, experiment tracking, class imbalance handling, and evaluation gates.
 
 ---
 
