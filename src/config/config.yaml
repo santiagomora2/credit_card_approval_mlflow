@@ -1,0 +1,41 @@
+# -------------------------
+# MLflow
+# -------------------------
+mlflow:
+  experiment_name: "credit_card_approval_prediction"
+
+# -------------------------
+# Data
+# -------------------------
+data:
+  features_path: "data/features/data.csv"
+  target_column: "TARGET"
+
+# -------------------------
+# Train / Validation split
+# -------------------------
+split:
+  train_size: 0.7
+  val_size: 0.15
+  test_size: 0.15
+  random_state: 67
+
+# -------------------------
+# Models & hyperparameters
+# -------------------------
+model:
+
+  logistic_regression:
+    max_iter: 1000
+    C: 1.0
+
+  random_forest:
+    n_estimators: 300
+    max_depth: null
+
+# -------------------------
+# Evaluation / Gatekeeping
+# -------------------------
+evaluation:
+  metric: "roc_auc"
+  threshold: 0.70
