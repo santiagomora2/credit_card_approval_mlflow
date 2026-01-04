@@ -2,7 +2,9 @@
 # MLflow
 # -------------------------
 mlflow:
+  tracking_uri: "http://127.0.0.1:5000"
   experiment_name: "credit_card_approval_prediction"
+  model_name: "credit_card_approval_model"
 
 # -------------------------
 # Data
@@ -13,6 +15,28 @@ data:
   val_path: "data/features/val.csv"
   test_path: "data/features/test.csv"
   target_column: "TARGET"
+
+
+
+features:
+  numeric:
+    - FLAG_OWN_CAR
+    - FLAG_OWN_REALTY
+    - CNT_FAM_MEMBERS
+    - AMT_INCOME_TOTAL
+    - FLAG_WORK_PHONE
+    - FLAG_PHONE
+    - FLAG_EMAIL
+    - AGE
+    - YEARS_EMPLOYED
+  categorical:
+    - CODE_GENDER
+    - NAME_INCOME_TYPE
+    - NAME_EDUCATION_TYPE
+    - NAME_FAMILY_STATUS
+    - NAME_HOUSING_TYPE
+    - OCCUPATION_TYPE
+
 
 # -------------------------
 # Train / Validation split
@@ -51,4 +75,4 @@ model:
 # -------------------------
 evaluation:
   metric: "roc_auc"
-  threshold: 0.70
+  threshold: 0.5

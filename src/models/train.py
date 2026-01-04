@@ -17,6 +17,11 @@ from sklearn.metrics import (
     RocCurveDisplay
 )
 
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.pipeline import Pipeline
+
+
 # Utils
 
 def load_config(config_path: str) -> dict:
@@ -60,10 +65,13 @@ def main(model_type: str):
     # MLflow setup
 
     mlflow.set_experiment(config["mlflow"]["experiment_name"])
-    mlflow.sklearn.autolog(log_models=True)
-    mlflow.xgboost.autolog(log_models=True)
+    mlflow.sklearn.autolog(log_models=False)
+    mlflow.xgboost.autolog(log_models=False)
 
     # Load data
+
+    numeric_cols = config["features"]["numeric"]
+    categorical_cols = config["features"]["categorical"]
 
     target_col = config["data"]["target_column"]
 
@@ -78,6 +86,15 @@ def main(model_type: str):
 
     rng = np.random.default_rng(config["split"]["random_state"])
 
+    # Preprocessor
+
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ("num", StandardScaler(), numeric_cols),
+            ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_cols),
+        ]
+    )
+
     # Model selection
 
     model = None
@@ -85,28 +102,44 @@ def main(model_type: str):
 
     if model_type == "logistic_regression":
         cfg = config["model"]["logistic_regression"]
-        model = LogisticRegression(
+
+        clf = LogisticRegression(
             max_iter=cfg["max_iter"],
             C=cfg["C"],
             class_weight="balanced",
             n_jobs=-1
         )
 
+        model = Pipeline(
+            steps=[
+                ("preprocessing", preprocessor),
+                ("classifier", clf),
+            ]
+        )
+
     elif model_type == "random_forest":
         cfg = config["model"]["random_forest"]
-        model = RandomForestClassifier(
+
+        clf = RandomForestClassifier(
             n_estimators=cfg["n_estimators"],
             max_depth=cfg["max_depth"],
-            min_samples_leaf = cfg["min_samples_leaf"], 
+            min_samples_leaf=cfg["min_samples_leaf"],
             class_weight="balanced_subsample",
             random_state=config["split"]["random_state"],
             n_jobs=-1
         )
 
+        model = Pipeline(
+            steps=[
+                ("preprocessing", preprocessor),
+                ("classifier", clf),
+            ]
+        )
+
     elif model_type == "xgboost":
         cfg = config["model"]["xgboost"]
 
-        model = XGBClassifier(
+        clf = XGBClassifier(
             n_estimators=cfg["n_estimators"],
             max_depth=cfg["max_depth"],
             learning_rate=cfg["learning_rate"],
@@ -121,6 +154,12 @@ def main(model_type: str):
             n_jobs=-1
         )
 
+        model = Pipeline(
+            steps=[
+                ("preprocessing", preprocessor),
+                ("classifier", clf),
+            ]
+        )
 
     elif model_type == "majority_baseline":
         is_baseline = True
@@ -160,6 +199,7 @@ def main(model_type: str):
         # Artifacts
         log_confusion_and_roc(y_val, val_probs, model_type)
 
+        mlflow.sklearn.log_model(model, name="model")
 
 # Entry point
 

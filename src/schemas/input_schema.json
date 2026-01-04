@@ -1,0 +1,83 @@
+{
+  "type": "object",
+  "required": [
+    "CODE_GENDER",
+    "FLAG_OWN_CAR",
+    "FLAG_OWN_REALTY",
+    "AMT_INCOME_TOTAL",
+    "NAME_INCOME_TYPE",
+    "NAME_EDUCATION_TYPE",
+    "NAME_FAMILY_STATUS",
+    "NAME_HOUSING_TYPE",
+    "FLAG_WORK_PHONE",
+    "FLAG_PHONE",
+    "FLAG_EMAIL",
+    "OCCUPATION_TYPE",
+    "CNT_FAM_MEMBERS",
+    "AGE",
+    "YEARS_EMPLOYED"
+  ],
+  "properties": {
+    "CODE_GENDER": {
+      "type": "string",
+      "enum": ["M", "F"]
+    },
+    "FLAG_OWN_CAR": {
+      "type": "integer",
+      "enum": [0, 1]
+    },
+    "FLAG_OWN_REALTY": {
+      "type": "integer",
+      "enum": [0, 1]
+    },
+    "AMT_INCOME_TOTAL": {
+      "type": "number",
+      "minimum": 0
+    },
+    "NAME_INCOME_TYPE": {
+      "type": "string",
+      "enum": ["Working", "Commercial associate", "Pensioner", "State servant", "Student"]
+    },
+    "NAME_EDUCATION_TYPE": {
+      "type": "string",
+      "enum": ["Higher education", "Secondary / secondary special", "Incomplete higher", "Lower secondary", "Academic degree"]
+    },
+    "NAME_FAMILY_STATUS": {
+      "type": "string",
+      "enum": ["Civil marriage", "Married", "Single / not married", "Separated", "Widow"]
+    },
+    "NAME_HOUSING_TYPE": {
+      "type": "string",
+      "enum": ["Rented apartment", "House / apartment", "Municipal apartment", "With parents", "Co-op apartment", "Office apartment"]
+    },
+    "FLAG_WORK_PHONE": {
+      "type": "integer",
+      "enum": [0, 1]
+    },
+    "FLAG_PHONE": {
+      "type": "integer",
+      "enum": [0, 1]
+    },
+    "FLAG_EMAIL": {
+      "type": "integer",
+      "enum": [0, 1]
+    },
+    "OCCUPATION_TYPE": {
+      "type": "string",
+      "enum": ["None", "Security staff", "Sales staff", "Accountants", "Laborers", "Managers", "Drivers", "Core staff", "High skill tech staff", "Cleaning staff", "Private service staff", "Cooking staff", "Low-skill Laborers", "Medicine staff", "Secretaries", "Waiters/barmen staff", "HR staff", "Realty agents", "IT staff"]
+    },
+    "CNT_FAM_MEMBERS": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "AGE": {
+      "type": "integer",
+      "minimum": 18,
+      "maximum": 100
+    },
+    "YEARS_EMPLOYED": {
+      "type": "number",
+      "minimum": 0
+    }
+  }
+}

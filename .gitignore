@@ -3,6 +3,7 @@ __pycache__
 
 # MLFlow
 /mlruns
+/mlartifacts
 *.db
 
 # Data (due to data usage policy, available in kaggle)
