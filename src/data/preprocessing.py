@@ -42,7 +42,7 @@ def preprocess_data():
 
     # - NAME_INCOME_TYPE, NAME_EDUCATION_TYPE, NAME_FAMILY_STATUS, NAME_HOUSING_TYPE, OCCUPATION_TYPE -> one-hot
 
-    app_rd = pd.get_dummies(app_rd, columns=["NAME_INCOME_TYPE", "NAME_EDUCATION_TYPE", "NAME_FAMILY_STATUS", "NAME_HOUSING_TYPE", "OCCUPATION_TYPE", "CODE_GENDER"], drop_first=True, dtype=int)
+    # will be handled in training as a pipeline
 
     app_rd.to_csv("./data/processed/application_record_processed.csv", index=False)
 
