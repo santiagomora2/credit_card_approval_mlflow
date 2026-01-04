@@ -45,6 +45,15 @@ Given applicant demographic and financial information, the goal is to **predict*
 
 This is a **highly imbalanced** classification problem, reflecting real-world credit portfolios where defaults are rare but costly.
 
+
+> **Note on Predictive Power**  
+> Models trained **only on demographic data** (age, income, employment) have a known, limited ceiling. In real banking, these features alone typically yield **ROC-AUC scores of 0.50–0.60**—only marginally better than random guessing (AUC=0.5).
+
+> This project uses a classic, demographic-only dataset. The significant predictive lift in real credit scoring comes from **transactional and behavioral data** (e.g., repayment history), which is not used to build predictive features here. Therefore, a model performing within the **0.50–0.60 AUC range is an expected outcome**, not a pipeline failure.
+
+> **The Core Value of This Project**  
+> The focus is on demonstrating **production-grade MLOps practices** (tracking, registry, deployment) — the essential infrastructure for when more powerful data sources are integrated.
+
 ---
 
 ## Dataset
