@@ -6,7 +6,6 @@ from sklearn.metrics import roc_auc_score
 from pathlib import Path
 
 
-
 def load_config(path: str) -> dict:
     with open(path, "r") as f:
         return yaml.safe_load(f)
@@ -79,23 +78,22 @@ def main():
 
             result = mlflow.register_model(
                 model_uri=model_uri,
-                name="credit_card_approval_model"
+                name=model_name
             )
 
-            model_name = result.name
             model_version = result.version
-
-            # Assign alias
+            
+            # ADD @candidate ALIAS INSTEAD OF TRANSITIONING TO STAGE
             client.set_registered_model_alias(
                 name=model_name,
                 alias="candidate",
                 version=model_version
             )
-
-            print(f"Model registered as version {model_version} and aliased as @candidate")
+            
+            print(f"Model registered as version {model_version} with '@candidate' alias")
         else:
             mlflow.set_tag("registration_status", "rejected")
-            print("Model rejected — not registered.")
+            print("Model rejected — test ROC-AUC below threshold, not registered.")
 
 
 if __name__ == "__main__":

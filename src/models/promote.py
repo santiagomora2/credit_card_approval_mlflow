@@ -1,45 +1,64 @@
-from mlflow.tracking import MlflowClient
+from mlflow import MlflowClient
 import argparse
 
-def main(src_model: str, src_alias: str, dst_model: str):
+def manage_model_alias(model_name: str, version: int, alias: str, action: str = "add"):
+    """Add or remove an alias for a specific model version."""
     client = MlflowClient()
+    
+    if action == "add":
+        # Add or update the alias
+        client.set_registered_model_alias(
+            name=model_name,
+            alias=alias,
+            version=version
+        )
+        print(f"Model '{model_name}' version {version} assigned alias '{alias}'")
+    elif action == "remove":
+        # Remove the alias if it exists
+        client.delete_registered_model_alias(
+            name=model_name,
+            alias=alias
+        )
+        print(f"Removed alias '{alias}' from model '{model_name}'")
+    else:
+        raise ValueError(f"Unknown action: {action}. Use 'add' or 'remove'.")
 
-    src_model_uri = f"models:/{src_model}@{src_alias}"
-
-    client.copy_model_version(
-        src_model_uri=src_model_uri,
-        dst_name=dst_model
+def main():
+    parser = argparse.ArgumentParser(
+        description="Manage MLflow model version aliases"
     )
-
-    print(
-        f"Model promoted:\n"
-        f"  Source: {src_model}@{src_alias}\n"
-        f"  Destination: {dst_model}"
+    
+    parser.add_argument(
+        "--model-name",
+        type=str,
+        required=True,
+        help="Registered model name (e.g. credit_card_approval_model)"
     )
-
+    parser.add_argument(
+        "--version",
+        type=int,
+        required=True,
+        help="Model version number to manage alias for"
+    )
+    parser.add_argument(
+        "--alias",
+        type=str,
+        required=True,
+        choices=["champion", "candidate", "canary", "production", "staging"],
+        help="Alias to manage: champion, candidate, canary, production, or staging"
+    )
+    parser.add_argument(
+        "--action",
+        type=str,
+        required=False,
+        default="add",
+        choices=["add", "remove"],
+        help="Action to perform: add or remove alias (default: add)"
+    )
+    
+    args = parser.parse_args()
+    
+    manage_model_alias(args.model_name, args.version, args.alias, args.action)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Promote MLflow model via copy")
-
-    parser.add_argument(
-        "--src-name",
-        type=str,
-        required=True,
-        help="Source model name (e.g. credit_card_approval_model)"
-    )
-    parser.add_argument(
-        "--src-alias",
-        type=str,
-        required=True,
-        help="Source alias (e.g. candidate)"
-    )
-    parser.add_argument(
-        "--dst-name",
-        type=str,
-        required=True,
-        help="Destination model name (e.g. credit_card_approval_model_production)"
-    )
-
-    args = parser.parse_args()
-
-    main(args.src_name, args.src_alias, args.dst_name)
+    main()
