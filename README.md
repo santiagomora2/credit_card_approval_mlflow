@@ -21,6 +21,7 @@ This project doesn't emphasize model accuracy, but rather **production-grade ML 
   - [4. Evaluation & Quality Gates](#4-evaluation--quality-gates)
   - [5. Model Promotion](#5-model-promotion)
   - [6. Model Archive](#6-model-archive)
+  - [7. Production API & Monitoring](#7-production-api--monitoring)
 - [Complete Workflow](#complete-workflow)
 - [Model Performance](#model-performance)
 - [Future Enhancements](#future-enhancements)
@@ -97,7 +98,8 @@ credit_card_approval_mlflow/
 ├── data/
 │   ├── raw/                    # Original Kaggle data (not committed)
 │   ├── processed/              # Preprocessed application & credit records
-│   └── features/               # Final train/val/test splits
+│   ├── features/               # Final train/val/test splits
+│   └── production/             # Production prediction data
 ├── src/
 │   ├── config/
 │   │   └── config.yaml         # Centralized configuration
@@ -108,11 +110,17 @@ credit_card_approval_mlflow/
 │   │   ├── preprocessing.py    # Raw data preprocessing
 │   │   ├── features.py         # Feature engineering & target creation
 │   │   └── split_data.py       # Stratified train/val/test splitting
-│   └── models/
-│       ├── train.py            # Model training with MLflow
-│       ├── select_and_register.py  # Best model selection & registration
-│       ├── evaluate.py         # Model evaluation on test set
-│       └── promote.py          # Model promotion between environments
+│   ├── models/
+│   │   ├── train.py            # Model training with MLflow
+│   │   ├── select_and_register.py  # Best model selection & registration
+│   │   ├── evaluate.py         # Model evaluation on test set
+│   │   ├── promote.py          # Model promotion between environments
+│   │   └── archival.py         # Model archival & unarchival
+│   ├── serving/
+│   │   └── app.py              # FastAPI production backend
+│   └── monitoring/
+│       ├── log_predictions.py  # Production prediction logging
+│       └── drift.py            # Drift detection and monitoring (in development)
 ├── environment.yml             # Conda environment file
 └── README.md
 ```
@@ -437,6 +445,57 @@ mlflow models serve \
 ```
 ---
 
+### 7. Production API & Monitoring
+
+Files: `serving/app.py`, `monitoring/log_predictions.py`, `monitoring/drift.py`
+
+#### Production API (`serving/app.py`)
+
+**Objective:** FastAPI backend for production model serving with request logging
+
+**Features:**
+
+- **REST API Endpoints**: /predict for single/batch predictions, /health for monitoring
+- **CORS Support**: Configurable cross-origin resource sharing
+- **Latency Tracking**: Measures end-to-end prediction time
+- **Error Handling**: Structured error responses and logging
+
+**Running the API:**
+
+```bash
+uvicorn src.serving.app:app --host 0.0.0.0 --port 8000
+```
+
+#### Prediction Logging (`monitoring/log_predictions.py`)
+
+**Objective:** Log all production predictions for monitoring and drift detection
+
+**Logging Strategy:**
+
+- **CSV Storage**: Append all predictions with metadata to `data/production/production_data.csv`
+- **MLflow Metrics**: Log aggregated metrics (mean, std, latency) to `production_monitoring` experiment
+- **Single Function**: `predict_and_log()` handles model loading, prediction, and logging in one call
+
+**Logged Data:**
+
+- Input features
+- Prediction probabilities and binary classifications
+- Timestamps and model version
+- Prediction latency
+
+**Architecture**:
+```
+FastAPI → MLflow Model → Prediction
+   ↓
+MLflow Tracking (log requests, responses, latencies)
+```
+
+#### Drift Monitoring (`monitoring/drift.py`)
+
+**Objective:** Monitor model performance and data drift over time
+
+(Currently in development)
+
 ## Complete Workflow
 
 ### Prerequisites
@@ -582,6 +641,42 @@ curl -X POST http://127.0.0.1:5001/invocations \
 
 **Expected Response**: Probability score between 0 and 1
 
+#### Step 10: Deploy Production API
+
+```bash
+# Start FastAPI backend
+uvicorn src.serving.app:app --host 0.0.0.0 --port 8000
+```
+
+#### Step 11: Test Production API
+
+```bash
+curl -X POST http://127.0.0.1:8000/predict \
+  -H "Content-Type: application/json" \
+  -d '[{
+    "CODE_GENDER": "M",
+    "FLAG_OWN_CAR": 1,
+    "FLAG_OWN_REALTY": 0,
+    "AMT_INCOME_TOTAL": 150000,
+    "NAME_INCOME_TYPE": "Working",
+    "NAME_EDUCATION_TYPE": "Higher education",
+    "NAME_FAMILY_STATUS": "Married",
+    "NAME_HOUSING_TYPE": "House / apartment",
+    "FLAG_WORK_PHONE": 1,
+    "FLAG_PHONE": 1,
+    "FLAG_EMAIL": 0,
+    "OCCUPATION_TYPE": "IT staff",
+    "CNT_FAM_MEMBERS": 2,
+    "AGE": 35,
+    "YEARS_EMPLOYED": 5
+  }]'
+```
+
+#### Step 12: Monitor Production Data
+
+- CSV Logs: Check `data/production/production_data.csv` for all predictions
+- MLflow Metrics: View aggregated metrics in `production_monitoring` experiment
+- Drift Detection: Periodically run drift checks to monitor model performance
 
 ### Additional Useful Commands
 
@@ -626,27 +721,10 @@ mlflow models serve -m "models:/credit_card_approval_model/1" -p 5003
 
 ## Future Enhancements
 
-### 1. FastAPI Backend (In Development)
-
-**Goal**: Production-grade serving with monitoring and data logging
-
-**Planned Features**:
-- RESTful API endpoints for predictions
-- Request/response logging to MLflow
-- Model performance monitoring (data drift, prediction distribution)
-
-**Architecture**:
-```
-FastAPI → MLflow Model → Prediction
-   ↓
-MLflow Tracking (log requests, responses, latencies)
-```
-
-### 2. Model Monitoring
+### 1. Model Monitoring
 
 - **Data Drift Detection**: Monitor feature distributions over time
 - **Prediction Drift**: Track changes in prediction distributions
-- **Performance Degradation Alerts**: Automated alerts when ROC-AUC drops below threshold
 
 ---
 
