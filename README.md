@@ -320,15 +320,9 @@ Before promoting to production, the candidate model undergoes a **staging evalua
 #### Running Evaluation
 
 ```bash
-# Promote candidate to staging
-python3 src/models/promote.py \
-    --src-name credit_card_approval_model \
-    --src-alias candidate \
-    --dst-name credit_card_approval_model_staging
-
-# Evaluate staging model
-python3 src/models/evaluate.py \
-  --model-uri models:/credit_card_approval_model_staging/latest
+# Evaluate candidate model using alias
+python3 ./src/models/evaluate.py \
+  --model-uri "models:/credit_card_approval_model@candidate"
 ```
 
 **Output**:
@@ -345,36 +339,49 @@ Model PASSED staging evaluation.
 
 #### Promotion Workflow
 
-Models progress through environments using **MLflow Model Registry**:
+Models progress through environments using **MLflow Model Registry Aliases**:
 
 ```
-Training Runs → @candidate → Staging → Production
+Training Runs → @candidate → Staging → @champion (Production)
 ```
 
 #### Promotion Steps
 
-**1. Candidate to Staging**:
+**1. Model is selected as best performer**
+
+**2. Model passes staging evaluation**
+
+**3. Promote Candidate to Production (assign champion alias):**:
 ```bash
-python3 src/models/promote.py \
-    --src-name credit_card_approval_model \
-    --src-alias candidate \
-    --dst-name credit_card_approval_model_staging
+# Add champion alias to the approved version (this becomes the production model)
+python3 ./src/models/promote.py \
+  --model-name credit_card_approval_model \
+  --version 1 \
+  --alias champion \
+  --action add
+
+# Optional: Remove candidate alias if no longer needed
+python3 ./src/models/promote.py \
+  --model-name credit_card_approval_model \
+  --version 1 \
+  --alias candidate \
+  --action remove
 ```
 
-**2. Staging to Production** (after passing evaluation):
-```bash
-python3 src/models/promote.py \
-    --src-name credit_card_approval_model_staging \
-    --src-alias latest \
-    --dst-name credit_card_approval_model_production
-```
+#### Alias Management vs. Deprecated Staging
 
-#### Copy vs. Transition
+**Alias Management Benefits**
 
-This pipeline uses `copy_model_version` rather than model version transitions:
-- **Benefit**: Separate model names for each environment enable environment-specific access control
-- **Trade-off**: Slightly more complex registry structure
-- **Alternative**: Use MLflow's built-in `transition_model_version_stage` (deprecated) for simpler workflows
+This workflow uses MLflow aliases instead of deprecated stages:
+
+- **Mutable**: Aliases can be reassigned to different versions without changing consumer code
+- **Auditable**: Clear history of which version has which alias at any time
+- **Flexible**: Multiple aliases can point to the same model version
+- **Standard Practices**:
+
+    - `champion`: Primary production model (auto-prefixed as `@champion`)
+    - `candidate`: New candidate ready for evaluation (auto-prefixed as `@candidate`)
+    - `canary`: Model for canary testing (auto-prefixed as `@canary`)
 
 ---
 
@@ -450,27 +457,16 @@ python3 ./src/models/select_and_register.py
 **What this does**:
 1. Identifies run with highest validation ROC-AUC
 2. Evaluates on test set
-3. If `test_roc_auc >= threshold`: Registers model as `@candidate`
+3. If `test_roc_auc >= threshold`: Registers model with `@candidate` alias
 4. If failed: Logs rejection (iterate on training)
 
 ---
 
-#### Step 5: Promote to Staging
+#### Step 5: Staging Evaluation
 
 ```bash
-python3 src/models/promote.py \
-    --src-name credit_card_approval_model \
-    --src-alias candidate \
-    --dst-name credit_card_approval_model_staging
-```
-
----
-
-#### Step 6: Staging Evaluation
-
-```bash
-python3 src/models/evaluate.py \
-  --model-uri models:/credit_card_approval_model_staging/latest
+python3 ./src/models/evaluate.py \
+ --model-uri "models:/credit_card_approval_model@candidate"
 ```
 
 **Quality Gate**: Must pass ROC-AUC threshold to proceed
@@ -480,10 +476,19 @@ python3 src/models/evaluate.py \
 #### Step 7: Promote to Production
 
 ```bash
-python3 src/models/promote.py \
-  --src-name credit_card_approval_model_staging \
-  --src-alias latest \
-  --dst-name credit_card_approval_model_production
+# Add @champion alias to the approved version (this becomes the production model)
+python3 ./src/models/promote.py \
+ --model-name credit_card_approval_model \
+ --version 1 \
+ --alias champion \
+ --action add
+
+# Optional: Remove @candidate alias if no longer needed
+python3 ./src/models/promote.py \
+ --model-name credit_card_approval_model \
+ --version 1 \
+ --alias candidate \
+ --action remove
 ```
 
 ---
@@ -491,8 +496,9 @@ python3 src/models/promote.py \
 #### Step 8: Model Serving
 
 ```bash
+# Serve using the @champion alias (production model)
 mlflow models serve \
-  -m models:/credit_card_approval_model_production/latest \
+  -m models:/credit_card_approval_model@champion \
   -p 5001 \
   --env-manager local
 ```
@@ -524,6 +530,19 @@ curl -X POST http://127.0.0.1:5001/invocations \
 
 **Expected Response**: Probability score between 0 and 1
 
+
+### Additional Useful Commands
+
+```bash
+# To check which version has which alias:
+mlflow models list-alias-versions --name credit_card_approval_model
+
+# To serve a model with custom alias:
+mlflow models serve -m "models:/credit_card_approval_model@canary" -p 5002
+
+# To serve without any alias (specific version):
+mlflow models serve -m "models:/credit_card_approval_model/1" -p 5003
+```
 ---
 
 ## Model Performance
