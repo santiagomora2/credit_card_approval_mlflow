@@ -76,3 +76,13 @@ model:
 evaluation:
   metric: "roc_auc"
   threshold: 0.5
+
+# -------------------------
+# FastAPI Backend
+# -------------------------
+
+api:
+  # Model serving configuration
+  production_model_uri: "models:/credit_card_approval_model@champion"
+  prediction_threshold: 0.5
+  production_data_path: "data/production/production_data.csv"
