@@ -44,8 +44,7 @@ def main():
         "--alias",
         type=str,
         required=True,
-        choices=["champion", "candidate", "canary", "production", "staging"],
-        help="Alias to manage: champion, candidate, canary, production, or staging"
+        help="Alias to manage: champion, candidate, canary, production, staging..."
     )
     parser.add_argument(
         "--action",

@@ -20,6 +20,7 @@ This project doesn't emphasize model accuracy, but rather **production-grade ML 
   - [3. Model Selection & Registration](#3-model-selection--registration)
   - [4. Evaluation & Quality Gates](#4-evaluation--quality-gates)
   - [5. Model Promotion](#5-model-promotion)
+  - [6. Model Archive](#6-model-archive)
 - [Complete Workflow](#complete-workflow)
 - [Model Performance](#model-performance)
 - [Future Enhancements](#future-enhancements)
@@ -383,6 +384,57 @@ This workflow uses MLflow aliases instead of deprecated stages:
     - `candidate`: New candidate ready for evaluation (auto-prefixed as `@candidate`)
     - `canary`: Model for canary testing (auto-prefixed as `@canary`)
 
+### 6. Model Archive
+
+**File**: `archive_model.py`
+
+#### Archival Approach
+
+With MLflow's deprecated stages, archival is handled using **tags** instead of a dedicated "Archived" stage:
+
+1. **Tag-Based Archival**: Models are marked with `archived=true` tag
+2. **Audit Trail**: `archived_at` timestamp and `archival_reason` tags provide history
+3. **Clean Registry**: Active aliases are removed during archival
+
+#### Archival Workflow
+
+**Archive a model version**:
+```bash
+python3 src/models/archive_model.py archive \
+  --model-name credit_card_approval_model \
+  --version 2 \
+  --reason "Replaced by version 3 with improved ROC-AUC"
+```
+
+**What happens:**
+
+- Removes all active aliases (e.g., `@champion`, `@candidate`)
+- Sets `archived=true` tag
+- Sets `archived_at` timestamp (ISO format)
+- Sets `archival_reason` tag (if provided)
+
+**Unarchive a model version**
+
+```bash
+python3 src/models/archive_model.py unarchive \
+  --model-name credit_card_approval_model \
+  --version 2 \
+  --alias candidate
+```
+
+**What happens:**
+- Removes archival tags from a model version 
+- Adds an optional alias
+
+**Note:** Archived models are still accessible by version number, just not through aliases:
+
+```bash
+# Serve archived version directly (by version number)
+mlflow models serve \
+  -m "models:/credit_card_approval_model/2" \
+  -p 5002 \
+  --env-manager local
+```
 ---
 
 ## Complete Workflow
